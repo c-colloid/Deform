@@ -1,17 +1,19 @@
 {
-    "name": "Deform",
+    "name": "NDMFDeform.Deform",
+    "rootNamespace": "NDMFDeform",
     "references": [
         "Unity.Burst",
         "Unity.Mathematics",
         "Beans.Unity.Mathematics",
         "Beans.Unity.Collections"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": []
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

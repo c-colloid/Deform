@@ -1,4 +1,4 @@
-﻿namespace Deform
+namespace Deform
 {
     public enum StripMode
     {

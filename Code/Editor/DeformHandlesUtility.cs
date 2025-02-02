@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Deform;
 
 namespace DeformEditor

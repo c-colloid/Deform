@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Beans.Unity.Collections;
 using Unity.Collections;
 using Unity.Mathematics;

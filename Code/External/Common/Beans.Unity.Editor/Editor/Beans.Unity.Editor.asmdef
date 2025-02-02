@@ -1,7 +1,7 @@
 {
-    "name": "Beans.Unity.Editor",
+    "name": "NDMFDeform.Beans.Unity.Editor",
+    "rootNamespace": "NDMFDeform",
     "references": [],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
@@ -9,6 +9,8 @@
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": []
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

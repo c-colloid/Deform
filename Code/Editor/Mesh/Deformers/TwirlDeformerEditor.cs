@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using Beans.Unity.Editor;

@@ -1,4 +1,4 @@
-﻿namespace Deform
+namespace Deform
 {
 	/// <summary>
 	/// None: Normals aren't touched.

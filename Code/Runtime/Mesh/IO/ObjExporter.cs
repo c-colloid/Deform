@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Credit to KeliHlodversson for writing the original code and posting it to the unify community.
  * http://wiki.unity3d.com/index.php/ObjExporter
  * I added support for skinned mesh renderers and I reformatted/styled the code to my personal preference.

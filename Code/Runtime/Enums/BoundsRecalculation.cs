@@ -1,4 +1,4 @@
-﻿namespace Deform
+namespace Deform
 {
 	/// <summary>
 	/// Auto: Bounds are recalculated if a deformer requires it, and at the very end.

@@ -1,4 +1,4 @@
-﻿namespace Deform
+namespace Deform
 {
 	/// <summary>
 	/// Holds the data that a Deformer will process.

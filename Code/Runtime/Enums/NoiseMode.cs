@@ -1,4 +1,4 @@
-﻿namespace Deform
+namespace Deform
 {
 	/// <summary>
 	/// Holds different modes and spaces for noise to be applied in.

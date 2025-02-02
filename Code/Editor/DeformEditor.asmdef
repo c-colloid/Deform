@@ -1,11 +1,11 @@
 {
-    "name": "DeformEditor",
+    "name": "NDMFDeform.DeformEditor",
+    "rootNamespace": "NDMFDeform",
     "references": [
         "Beans.Unity.Editor",
         "Deform",
         "Unity.Mathematics"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
@@ -13,6 +13,8 @@
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": []
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

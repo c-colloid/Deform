@@ -1,4 +1,4 @@
-﻿namespace Deform
+namespace Deform
 {
 	/// <summary>
 	/// Holds different update modes.
