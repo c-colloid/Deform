@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Jobs;
 
 namespace Deform
@@ -6,7 +6,7 @@ namespace Deform
 	/// <summary>
 	/// The base class for mesh deformation.
 	/// </summary>
-	public abstract class Deformer : MonoBehaviour, IDeformer<MeshData>
+	public abstract class Deformer : MonoBehaviour, IDeformer<MeshData>, VRC.SDKBase.IEditorOnly
 	{
 		public const bool COMPILE_SYNCHRONOUSLY = true;
 		public const int DEFAULT_BATCH_COUNT = 64;

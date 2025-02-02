@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Jobs;
@@ -11,7 +11,7 @@ namespace Deform
 	/// </summary>
 	[ExecuteAlways, DisallowMultipleComponent]
 	[HelpURL("https://github.com/keenanwoodall/Deform/wiki/Deformable")]
-	public class Deformable : MonoBehaviour, IDeformable
+	public class Deformable : MonoBehaviour, IDeformable, VRC.SDKBase.IEditorOnly
 	{
 		/// <summary>
 		/// Assigning Auto sets Manager to the default manager.
