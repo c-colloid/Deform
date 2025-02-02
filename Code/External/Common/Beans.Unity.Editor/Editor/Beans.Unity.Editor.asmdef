@@ -1,9 +1,7 @@
 {
     "name": "NDMFDeform.Beans.Unity.Editor",
     "rootNamespace": "NDMFDeform",
-    "references": [
-        "GUID:56bcf63cc255cab4883cf094b0ebe963"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],

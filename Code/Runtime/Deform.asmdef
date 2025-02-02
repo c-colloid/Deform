@@ -2,10 +2,9 @@
     "name": "NDMFDeform.Deform",
     "rootNamespace": "NDMFDeform",
     "references": [
-        "NDMFDeform",
-        "Unity.Mathematics",
         "NDMFDeform.Beans.Unity.Mathematics",
         "NDMFDeform.Beans.Unity.Collections",
+        "Unity.Mathematics",
         "Unity.Burst"
     ],
     "includePlatforms": [],
