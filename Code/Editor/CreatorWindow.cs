@@ -55,7 +55,8 @@ namespace DeformEditor
 			{ Category.Noise, true },
 			{ Category.Mask, true },
 			{ Category.Utility, true },
-			{ Category.WIP, true }
+			{ Category.WIP, true },
+			{ Category.VRChat, true}
 		};
 
 		[MenuItem ("Window/Deform/Creator", priority = 10000)]

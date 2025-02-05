@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Deform
 {
@@ -8,7 +8,8 @@ namespace Deform
 		Noise,
 		Mask,
 		Utility, 
-		WIP
+		WIP,
+		VRChat
 	}
 
 	/// <summary>
