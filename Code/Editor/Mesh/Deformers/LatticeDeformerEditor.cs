@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
@@ -7,11 +7,13 @@ using Unity.Mathematics;
 using UnityEngine.Rendering;
 using static Unity.Mathematics.math;
 using float3 = Unity.Mathematics.float3;
+using MirrorAxis = Deform.LatticeDeformer.MirrorAxis;
+using Unity.Collections;
 
 namespace DeformEditor
 {
     [CustomEditor(typeof(LatticeDeformer))]
-    public class LatticeDeformerEditor : DeformerEditor
+	public class LatticeDeformerEditor : DeformerEditor
     {
         private Vector3Int newResolution;
 
@@ -42,18 +44,27 @@ namespace DeformEditor
         {
             public static readonly GUIContent Resolution = new GUIContent(text: "Resolution", tooltip: "Per axis control point counts, the higher the resolution the more splits");
             public static readonly GUIContent Mode = new GUIContent(text: "Mode", tooltip: "Mode by which vertices are positioned between control points");
-            public static readonly GUIContent StopEditing = new GUIContent(text: "Stop Editing Control Points", tooltip: "Restore normal transform tools\n\nShortcut: Escape");
+	        public static readonly GUIContent StopEditing = new GUIContent(text: "Stop Editing Control Points", tooltip: "Restore normal transform tools\n\nShortcut: Escape");
+            
+	        public static readonly GUIContent MirrorAxis = new GUIContent(text: "MirrorAxis", tooltip: "Selecting the axis of symmetry for mirror editing");
+	        public static readonly GUIContent MirrorCenter = new GUIContent(text: "MirrorCenter", tooltip: "Central Potition of Mirror Editing");
         }
 
         private class Properties
         {
             public SerializedProperty Resolution;
-            public SerializedProperty Mode;
+	        public SerializedProperty Mode;
+	        
+	        public SerializedProperty MirrorAxis;
+	        public SerializedProperty MirrorCenter;
 
             public Properties(SerializedObject obj)
             {
                 Resolution = obj.FindProperty("resolution");
-                Mode = obj.FindProperty("mode");
+	            Mode = obj.FindProperty("mode");
+	            
+	            MirrorAxis = obj.FindProperty("mirrorAxis");
+	            MirrorCenter = obj.FindProperty("mirrorCenter");
             }
         }
 
@@ -94,7 +105,11 @@ namespace DeformEditor
             // Make sure we have at least two control points per axis
             newResolution = Vector3Int.Max(newResolution, new Vector3Int(2, 2, 2));
             // Don't let the lattice resolution get ridiculously high
-            newResolution = Vector3Int.Min(newResolution, new Vector3Int(32, 32, 32));
+	        newResolution = Vector3Int.Min(newResolution, new Vector3Int(32, 32, 32));
+	        
+	        EditorGUILayout.PropertyField(properties.MirrorAxis);
+
+	        EditorGUILayout.PropertyField(properties.MirrorCenter);
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -127,13 +142,14 @@ namespace DeformEditor
         }
 
         public override void OnSceneGUI()
-        {
+	    {
+		    if (target == null) return;
             base.OnSceneGUI();
 
             LatticeDeformer lattice = target as LatticeDeformer;
             Transform transform = lattice.transform;
             float3[] controlPoints = lattice.ControlPoints;
-            Event e = Event.current;
+	        Event e = Event.current;
 
             using (new Handles.DrawingScope(transform.localToWorldMatrix))
             {
@@ -228,7 +244,10 @@ namespace DeformEditor
 
             if (selectedIndices.Count != 0)
             {
-                var currentPivotPosition = float3.zero;
+	            var currentPivotPosition = float3.zero;
+                
+	            LatticeDeformer.MirrorAxis mirrorAxisEnum = (LatticeDeformer.MirrorAxis)properties.MirrorAxis.intValue;
+	            Transform mirrorCenterTransform = properties.MirrorCenter.objectReferenceValue as Transform;
 
                 if (Tools.pivotMode == PivotMode.Center)
                 {
@@ -280,6 +299,8 @@ namespace DeformEditor
                     handleRotation = Quaternion.identity;
                 }
 
+	            var resolution = lattice.Resolution;
+	            
                 if (activeTool == Tool.Move)
                 {
                     EditorGUI.BeginChangeCheck();
@@ -289,11 +310,83 @@ namespace DeformEditor
                         Undo.RecordObject(target, "Update Lattice");
 
                         var delta = newPosition - handlePosition;
-                        delta = transform.InverseTransformVector(delta);
-                        foreach (var selectedIndex in selectedIndices)
-                        {
-                            controlPoints[selectedIndex] += delta;
-                        }
+	                    delta = transform.InverseTransformVector(delta);
+	                    
+                        //foreach (var selectedIndex in selectedIndices)
+                        //{
+	                    //    controlPoints[selectedIndex] += delta;
+                        //}
+                            
+	                    // ミラー軸の設定を取得
+	                    Vector3Int mirrorAxis = new Vector3Int(
+		                    mirrorAxisEnum.HasFlag(MirrorAxis.X) ? 1 : 0,
+		                    mirrorAxisEnum.HasFlag(MirrorAxis.Y) ? 1 : 0,
+		                    mirrorAxisEnum.HasFlag(MirrorAxis.Z) ? 1 : 0
+	                    );
+
+	                    Vector3 mirrorCenter = mirrorCenterTransform != null ? 
+		                    transform.InverseTransformPoint(mirrorCenterTransform.position) : 
+		                    Vector3.zero;
+	                    
+	                    // 選択中の点のうち、代表点とその従属点の関係を特定
+	                    var leaderPoints = new HashSet<int>();
+	                    var followerMapping = new Dictionary<int, int>(); // follower -> leader
+
+	                    foreach (var index in selectedIndices)
+	                    {
+		                    if (followerMapping.ContainsKey(index))
+			                    continue;
+
+		                    bool isLeader = true;
+		                    foreach (var otherIndex in selectedIndices)
+		                    {
+			                    if (index == otherIndex) continue;
+
+			                    var mirroredIndices = GetAllMirroredIndices(otherIndex, resolution, mirrorCenter, mirrorAxis);
+			                    if (mirroredIndices.Contains(index))
+			                    {
+				                    // 既に処理済みの点のミラーである場合
+				                    if (leaderPoints.Contains(otherIndex))
+				                    {
+					                    isLeader = false;
+					                    followerMapping[index] = otherIndex;
+					                    break;
+				                    }
+			                    }
+		                    }
+
+		                    if (isLeader)
+		                    {
+			                    leaderPoints.Add(index);
+		                    }
+	                    }
+
+	                    // 代表点の移動を適用
+	                    foreach (var leaderIndex in leaderPoints)
+	                    {
+		                    controlPoints[leaderIndex] += delta;
+
+		                    // この代表点に従属する選択された点の移動
+		                    foreach (var pair in followerMapping)
+		                    {
+			                    if (pair.Value == leaderIndex)
+			                    {
+				                    float3 mirroredDelta = CalculateMirroredDelta(leaderIndex, pair.Key, delta, resolution, mirrorAxis);
+				                    controlPoints[pair.Key] += mirroredDelta;
+			                    }
+		                    }
+
+		                    // 非選択のミラー点の移動
+		                    var mirroredIndices = GetAllMirroredIndices(leaderIndex, resolution, mirrorCenter, mirrorAxis);
+		                    foreach (var mirroredIndex in mirroredIndices)
+		                    {
+			                    if (!selectedIndices.Contains(mirroredIndex))
+			                    {
+				                    float3 mirroredDelta = CalculateMirroredDelta(leaderIndex, mirroredIndex, delta, resolution, mirrorAxis);
+				                    controlPoints[mirroredIndex] += mirroredDelta;
+			                    }
+		                    }
+	                    }
                         
                         CacheResizePositionsFromChange();
                     }
@@ -308,13 +401,31 @@ namespace DeformEditor
 
                         for (var index = 0; index < selectedIndices.Count; index++)
                         {
+                        	//ミラー編集用のインデックス
+                        	int selectedIndex = selectedIndices[index];
+	                        int mirroredIndex = GetMirroredIndex(selectedIndex, resolution, properties.MirrorCenter.vector3Value, properties.MirrorAxis.vector3IntValue);
+
                             if (Tools.pivotRotation == PivotRotation.Global)
                             {
-                                controlPoints[selectedIndices[index]] = originalPivotPosition + (float3) transform.InverseTransformDirection(mul(newRotation, transform.TransformDirection(selectedOriginalPositions[index] - originalPivotPosition)));
+	                            controlPoints[selectedIndices[index]] = originalPivotPosition + (float3) transform.InverseTransformDirection(mul(newRotation, transform.TransformDirection(selectedOriginalPositions[index] - originalPivotPosition)));
+                                
+	                            //ミラー編集
+	                            if (mirroredIndex != -1 && mirroredIndex != selectedIndex)
+	                            {
+		                            controlPoints[mirroredIndex] = originalPivotPosition + (float3)transform.InverseTransformDirection(
+			                            mul(newRotation, transform.TransformDirection(selectedOriginalPositions[index] - originalPivotPosition))
+		                            );
+	                            }
                             }
                             else
                             {
-                                controlPoints[selectedIndices[index]] = originalPivotPosition + mul(mul(inverse(handleRotation), newRotation), (selectedOriginalPositions[index] - originalPivotPosition));
+	                            controlPoints[selectedIndices[index]] = originalPivotPosition + mul(mul(inverse(handleRotation), newRotation), (selectedOriginalPositions[index] - originalPivotPosition));
+                                
+	                            //ミラー編集
+	                            if (mirroredIndex != -1 && mirroredIndex != selectedIndex)
+	                            {
+		                            controlPoints[mirroredIndex] = originalPivotPosition + mul(mul(inverse(handleRotation), newRotation), (selectedOriginalPositions[index] - originalPivotPosition));
+	                            }
                             }
                         }
                         
@@ -415,17 +526,30 @@ namespace DeformEditor
                     }
                     else
                     {
-                        if (selectedIndices.Count == 0) // This shouldn't be called if you have any points selected (we want to allow you to deselect the points)
-                        {
-                            DeformUnityObjectSelection.AttemptMouseUpObjectSelection();
-                        }
-                        else
-                        {
-                            DeselectAll();
-                        }
+	                    
+	                    if (selectedIndices.Count == 0)
+	                    {
+		                    try
+		                    {
+			                    // シーンビューでの選択処理をtry-catchで囲む
+			                    if (e.type == EventType.MouseUp && e.button == 0)
+			                    {
+				                    DeformUnityObjectSelection.AttemptMouseUpObjectSelection();
+			                    }
+		                    }
+			                    catch (System.NullReferenceException)
+			                    {
+				                    // null参照例外を安全に処理
+			                    }
+	                    }
+	                    else
+	                    {
+		                    DeselectAll();
+	                    }
                     }
 
-                    mouseDragState = MouseDragState.NotActive;
+	                mouseDragState = MouseDragState.NotActive;
+                    
                 }
             }
 
@@ -544,7 +668,48 @@ namespace DeformEditor
         private void DrawLattice(LatticeDeformer lattice, DeformHandles.LineMode lineMode)
         {
             var resolution = lattice.Resolution;
-            var controlPoints = lattice.ControlPoints;
+	        var controlPoints = lattice.ControlPoints;
+            
+	        // MirrorAxisの取得を修正
+	        LatticeDeformer.MirrorAxis mirrorAxisEnum = (LatticeDeformer.MirrorAxis)properties.MirrorAxis.intValue;
+	        Vector3Int mirrorAxis = new Vector3Int(
+		        (mirrorAxisEnum.HasFlag(LatticeDeformer.MirrorAxis.X)) ? 1 : 0,
+		        (mirrorAxisEnum.HasFlag(LatticeDeformer.MirrorAxis.Y)) ? 1 : 0,
+		        (mirrorAxisEnum.HasFlag(LatticeDeformer.MirrorAxis.Z)) ? 1 : 0
+	        );
+	        
+	        // MirrorCenterの取得を修正（Transform型として）
+	        Transform mirrorCenterTransform = properties.MirrorCenter.objectReferenceValue as Transform;
+	        Vector3 mirrorCenter = mirrorCenterTransform != null ? mirrorCenterTransform.position : Vector3.zero;
+
+	        // Transform座標をローカル空間に変換
+	        if (mirrorCenterTransform != null)
+	        {
+		        mirrorCenter = lattice.transform.InverseTransformPoint(mirrorCenter);
+	        }
+	        
+	        // オリジナルの格子を描画
+	        DrawLatticeGrid(lattice, resolution, controlPoints, lineMode);
+
+	        // ミラー側の格子を描画（選択されている軸に応じて）
+	        if (mirrorAxis != Vector3Int.zero)
+	        {
+		        var mirroredPoints = new float3[controlPoints.Length];
+		        for (int i = 0; i < controlPoints.Length; i++)
+		        {
+			        mirroredPoints[i] = controlPoints[i];
+			        int mirroredIndex = GetMirroredIndex(i, resolution, mirrorCenter, mirrorAxis);
+			        if (mirroredIndex != -1 && mirroredIndex != i)
+			        {
+				        mirroredPoints[i] = controlPoints[mirroredIndex];
+			        }
+		        }
+		        DrawLatticeGrid(lattice, resolution, mirroredPoints, lineMode);
+	        }
+        }
+        
+	    private void DrawLatticeGrid(LatticeDeformer lattice, Vector3Int resolution, float3[] controlPoints, DeformHandles.LineMode lineMode)
+	    {
             for (int z = 0; z < resolution.z - 1; z++)
             {
                 for (int y = 0; y < resolution.y - 1; y++)
@@ -578,5 +743,106 @@ namespace DeformEditor
                 }
             }
         }
+        
+	    private int GetMirroredIndex(int index, Vector3Int resolution, Vector3 mirrorCenter, Vector3Int mirrorAxis)
+	    {
+		    // 1D index から 3D 座標に変換
+		    int x = index % resolution.x;
+		    int y = (index / resolution.x) % resolution.y;
+		    int z = index / (resolution.x * resolution.y);
+
+		    // 格子の中心を計算
+		    float centerX = (resolution.x - 1) * 0.5f + mirrorCenter.x;
+		    float centerY = (resolution.y - 1) * 0.5f + mirrorCenter.y;
+		    float centerZ = (resolution.z - 1) * 0.5f + mirrorCenter.z;
+
+		    // ミラー点の計算
+		    int mirrorX = mirrorAxis.x != 0 ? Mathf.RoundToInt(2 * centerX - x) : x;
+		    int mirrorY = mirrorAxis.y != 0 ? Mathf.RoundToInt(2 * centerY - y) : y;
+		    int mirrorZ = mirrorAxis.z != 0 ? Mathf.RoundToInt(2 * centerZ - z) : z;
+
+		    // 範囲チェック
+		    if (mirrorX < 0 || mirrorX >= resolution.x || 
+			    mirrorY < 0 || mirrorY >= resolution.y || 
+			    mirrorZ < 0 || mirrorZ >= resolution.z)
+		    {
+			    return -1;
+		    }
+
+		    int mirroredIndex = (mirrorZ * resolution.y + mirrorY) * resolution.x + mirrorX;
+		    return mirroredIndex == index ? -1 : mirroredIndex;
+	    }
+	    
+	    private List<int> GetAllMirroredIndices(int index, Vector3Int resolution, Vector3 mirrorCenter, Vector3Int mirrorAxis)
+	    {
+		    List<int> mirroredIndices = new List<int>();
+    
+		    // 1D index から 3D 座標に変換
+		    int x = index % resolution.x;
+		    int y = (index / resolution.x) % resolution.y;
+		    int z = index / (resolution.x * resolution.y);
+
+		    // 格子の中心を計算
+		    float centerX = (resolution.x - 1) * 0.5f + mirrorCenter.x;
+		    float centerY = (resolution.y - 1) * 0.5f + mirrorCenter.y;
+		    float centerZ = (resolution.z - 1) * 0.5f + mirrorCenter.z;
+
+		    // 各軸の反転状態を配列で保持 (false: そのまま, true: 反転)
+		    bool[] xFlip = mirrorAxis.x != 0 ? new[] { false, true } : new[] { false };
+		    bool[] yFlip = mirrorAxis.y != 0 ? new[] { false, true } : new[] { false };
+		    bool[] zFlip = mirrorAxis.z != 0 ? new[] { false, true } : new[] { false };
+
+		    // すべての組み合わせを試す
+		    foreach (bool flipX in xFlip)
+		    {
+			    foreach (bool flipY in yFlip)
+			    {
+				    foreach (bool flipZ in zFlip)
+				    {
+					    // 元の点と同じ組み合わせはスキップ
+					    if (!flipX && !flipY && !flipZ) continue;
+
+					    // ミラー点の計算
+					    int mirrorX = flipX ? Mathf.RoundToInt(2 * centerX - x) : x;
+					    int mirrorY = flipY ? Mathf.RoundToInt(2 * centerY - y) : y;
+					    int mirrorZ = flipZ ? Mathf.RoundToInt(2 * centerZ - z) : z;
+
+					    // 範囲チェック
+					    if (mirrorX < 0 || mirrorX >= resolution.x || 
+						    mirrorY < 0 || mirrorY >= resolution.y || 
+						    mirrorZ < 0 || mirrorZ >= resolution.z)
+					    {
+						    continue;
+					    }
+
+					    int mirroredIndex = (mirrorZ * resolution.y + mirrorY) * resolution.x + mirrorX;
+					    if (mirroredIndex != index && !mirroredIndices.Contains(mirroredIndex))
+					    {
+						    mirroredIndices.Add(mirroredIndex);
+					    }
+				    }
+			    }
+		    }
+
+		    return mirroredIndices;
+	    }
+	    
+	    private float3 CalculateMirroredDelta(int sourceIndex, int mirroredIndex, float3 sourceDelta, Vector3Int resolution, Vector3Int mirrorAxis)
+	    {
+		    // インデックスから3D座標に変換
+		    int x1 = sourceIndex % resolution.x;
+		    int x2 = mirroredIndex % resolution.x;
+		    int y1 = (sourceIndex / resolution.x) % resolution.y;
+		    int y2 = (mirroredIndex / resolution.x) % resolution.y;
+		    int z1 = sourceIndex / (resolution.x * resolution.y);
+		    int z2 = mirroredIndex / (resolution.x * resolution.y);
+
+		    return new float3(
+			    mirrorAxis.x != 0 && x1 != x2 ? -sourceDelta.x : sourceDelta.x,
+			    mirrorAxis.y != 0 && y1 != y2 ? -sourceDelta.y : sourceDelta.y,
+			    mirrorAxis.z != 0 && z1 != z2 ? -sourceDelta.z : sourceDelta.z
+		    );
+	    }
+	    
     }
 }

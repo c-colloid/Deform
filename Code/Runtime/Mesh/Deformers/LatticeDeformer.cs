@@ -1,4 +1,4 @@
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -12,7 +12,7 @@ namespace Deform
     [Deformer(Name = "Lattice", Description = "Free-form deform a mesh using lattice control points",
         Type = typeof(LatticeDeformer))]
     [HelpURL("https://github.com/keenanwoodall/Deform/wiki/LatticeDeformer")]
-    public class LatticeDeformer : Deformer
+	public partial class LatticeDeformer : Deformer
     {
         public enum InterpolationMode 
         {
@@ -161,20 +161,28 @@ namespace Deform
 
         public override JobHandle Process(MeshData data, JobHandle dependency = default)
         {
-            var meshToAxis = DeformerUtils.GetMeshToAxisSpace(transform, data.Target.GetTransform());
+	        var meshToAxis = DeformerUtils.GetMeshToAxisSpace(transform, data.Target.GetTransform());
+            
+	        // ミラー中心点をローカル空間に変換
+	        var localMirrorCenter = transform.InverseTransformPoint(MirrorCenter.position);
+	        // さらに [-0.5, 0.5] から [0,1] 空間に変換
+	        var normalizedMirrorCenter = (Vector3)transform(meshToAxis, localMirrorCenter) + new Vector3(0.5f, 0.5f, 0.5f);
 
             switch (mode)
             {
                 default:
                 case InterpolationMode.Linear:
                 {
-                    return new LatticeJob
+                    return new MirroredLatticeJob
                     {
                         controlPoints = new NativeArray<float3>(controlPoints, Allocator.TempJob),
                         resolution = new int3(resolution.x, resolution.y, resolution.z),
                         meshToTarget = meshToAxis,
                         targetToMesh = meshToAxis.inverse,
-                        vertices = data.DynamicNative.VertexBuffer
+	                    vertices = data.DynamicNative.VertexBuffer
+	                    ,
+	                    mirrorAxis = (int)mirrorAxis,
+	                    mirrorCenter = normalizedMirrorCenter
                     }.Schedule(data.Length, DEFAULT_BATCH_COUNT, dependency);
                 }
                 case InterpolationMode.Hermite:
@@ -185,7 +193,9 @@ namespace Deform
                         resolution = new int3(resolution.x, resolution.y, resolution.z),
                         meshToTarget = meshToAxis,
                         targetToMesh = meshToAxis.inverse,
-                        vertices = data.DynamicNative.VertexBuffer
+	                    vertices = data.DynamicNative.VertexBuffer
+	                    //,
+	                    //mirrorAxis = (int)mirrorAxis
                     }.Schedule(data.Length, DEFAULT_BATCH_COUNT, dependency);
                 }
             }
