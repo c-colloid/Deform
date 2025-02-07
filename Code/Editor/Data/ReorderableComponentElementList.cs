@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using UnityEngine;
 using UnityEditor;
@@ -12,7 +12,7 @@ namespace DeformEditor
 	/// Draws a reorderable list of IComponentElements.
 	/// </summary>
 	/// <typeparam name="T">The type of component the element holds.</typeparam>
-	public class ReorderableComponentElementList<T> : IDisposable where T : Component
+	public partial class ReorderableComponentElementList<T> : IDisposable where T : Component
 	{
 		private readonly ReorderableList list;
 		private Editor selectedComponentInspectorEditor;
@@ -122,13 +122,32 @@ namespace DeformEditor
 
 		public void Dispose ()
 		{
+			// インスタンスIDのチェックを追加
+			//if (instanceId == 0)
+			//{
+			//	Debug.LogError("Invalid instance ID detected during Dispose");
+			//	return;
+			//}
+			if (isDisposed)
+			{
+				Debug.LogWarning($"Dispose called multiple times on instance: {instanceId}");
+				return;
+			}
+			Debug.Log($"Dispose called. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
 #if UNITY_2019_1_OR_NEWER
-            SceneView.duringSceneGui -= SceneGUI;
+			UnregisterSceneGUI();
 #else
             SceneView.onSceneGUIDelegate -= SceneGUI;
 #endif
 			Object.DestroyImmediate (selectedComponentInspectorEditor, true);
 			selectedComponentInspectorEditor = null;
+			
+			lock (ActiveInstances)
+			{
+				ActiveInstances.Remove(instanceId);
+			}
+        
+			isDisposed = true;
 		}
 	}
 }
