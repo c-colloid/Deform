@@ -1,0 +1,23 @@
+#unity-checkmark {
+    display: flex;
+    visibility: hidden;
+}
+
+.unity-foldout__toggle {
+    border-left-color: rgba(0, 0, 0, 0.36);
+    border-right-color: rgba(0, 0, 0, 0.36);
+    border-top-color: rgba(0, 0, 0, 0.36);
+    border-bottom-color: rgba(0, 0, 0, 0.36);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 0;
+    border-left-width: 1px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    background-color: rgba(0, 0, 0, 0.16);
+}
+
+.unity-list-view__size-field {
+}
