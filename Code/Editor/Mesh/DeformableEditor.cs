@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
@@ -8,7 +8,7 @@ using Deform;
 namespace DeformEditor
 {
 	[CustomEditor(typeof(Deformable), editorForChildClasses: true), CanEditMultipleObjects]
-	public class DeformableEditor : Editor
+	public partial class DeformableEditor : Editor
 	{
 		private static class Styles
 		{
@@ -85,6 +85,9 @@ namespace DeformEditor
 		{
 			record = new GUIContent(DeformEditorResources.GetTexture("Record", false), "Record current bounds");
 			properties = new Properties(serializedObject);
+			
+			// 既存のインスタンスをすべて破棄
+			ReorderableComponentElementList<Deformer>.DisposeAllInstances();
 
 			deformerList = new ReorderableComponentElementList<Deformer>(serializedObject, serializedObject.FindProperty("deformerElements"));
 		}
