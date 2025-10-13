@@ -28,7 +28,7 @@ namespace DeformEditor
 			//root.Add (new IMGUIContainer(DrawIMGUI(DrawDeformersList)){style = {
 			//	marginBottom = 10
 			//}});
-			new ReorderableComponentElementList<Deform.Deformer>(root, serializedObject, serializedObject.FindProperty("deformerElements"));
+			new ReorderableComponentElementList<Deform.Deformer>(root, targets, serializedObject, serializedObject.FindProperty("deformerElements"));
 
 			root.Add (new IMGUIContainer(DrawIMGUI(DrawUtilityToolbar)){style = {
 				marginBottom = 10

@@ -17,6 +17,8 @@ namespace DeformEditor
 	{
 		private ListView listView;
 		private Foldout inspectorElement;
+		private UnityEngine.Object[] targets;
+		private SerializedObject serializedObject;
 		private SerializedProperty elements;
 		private VisualElement root;
 		[SerializeField]
@@ -33,8 +35,10 @@ namespace DeformEditor
 		private int instanceId;
 		private bool isDisposed = false;
 
-		public ReorderableComponentElementList(VisualElement root, SerializedObject serializedObject, SerializedProperty elements)
+		public ReorderableComponentElementList(VisualElement root, UnityEngine.Object[] targets, SerializedObject serializedObject, SerializedProperty elements)
 		{
+			this.targets = targets;
+			this.serializedObject = serializedObject;
 			this.elements = elements;
 			this.instanceId = GetHashCode();
 			
