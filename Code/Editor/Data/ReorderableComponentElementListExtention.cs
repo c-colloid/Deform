@@ -73,6 +73,7 @@ namespace DeformEditor
 			};
 			
 			listView.selectionChanged += OnSelectionChange;
+			listView.itemsChosen += OnSelectionChange;
             
 			if (root == null) return;
 			
@@ -121,7 +122,7 @@ namespace DeformEditor
 			if (isDisposed)
 			{
 				Debug.LogWarning($"OnSelectionChange called on disposed instance: {instanceId}");
-				return;
+				//return;
 			}
 			Debug.Log($"OnSelectionChange called. Instance: {instanceId}");
 			Debug.Log("Select");
