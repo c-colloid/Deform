@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement name="ElementsHeader" style="border-top-width: 1px; border-right-width: 1px; border-left-width: 1px; border-left-color: rgb(144, 144, 144); border-right-color: rgb(144, 144, 144); border-top-color: rgb(144, 144, 144); border-bottom-color: rgb(144, 144, 144); border-top-left-radius: 3px; border-top-right-radius: 3px; background-color: rgb(164, 164, 164); padding-top: 2px; padding-right: 2px; padding-bottom: 2px; padding-left: 2px;">
+        <ui:Label tabindex="-1" text=" &lt;b&gt;Header&lt;/b&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" enable-rich-text="true" style="-unity-text-align: middle-left; padding-left: 5px;" />
+    </ui:VisualElement>
+    <ui:ListView show-add-remove-footer="true" show-border="true" name="Elements" show-bound-collection-size="false" reorderable="true" virtualization-method="DynamicHeight" reorder-mode="Animated" show-alternating-row-backgrounds="All" />
+</ui:UXML>

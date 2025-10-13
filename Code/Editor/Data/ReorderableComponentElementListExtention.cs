@@ -21,6 +21,8 @@ namespace DeformEditor
 		private VisualElement root;
 		[SerializeField]
 		StyleSheet style;
+		[SerializeField]
+		VisualTreeAsset listviewelement;
 		
 		private bool isSceneGUIRegistered = false;
 		// インスタンスを追跡するための静的ディクショナリ
@@ -44,25 +46,21 @@ namespace DeformEditor
 			}
 			
 			Debug.Log($"Constructor called. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
-			style = DeformEditorResources.LoadAssetOfType<StyleSheet> ("listview");
+			style = DeformEditorResources.LoadAssetOfType<StyleSheet>("listview");
+			listviewelement = DeformEditorResources.LoadAssetOfType<VisualTreeAsset>("listview");
 			InitializeListView(root);
 			this.root = root;
 		}
 
 		private void InitializeListView(VisualElement root)
 		{
-			listView = new ListView(){name = "DeformerElements"};
+			var listviewcontainer = listviewelement.CloneTree();
+			listviewcontainer.Q<Label>().text = $"{typeof (T).Name}s";
+			listView = 
+				listviewcontainer.Q<ListView>();
+			listView.name = $"{typeof (T).Name}Elements";
+			listView.BindProperty(elements);
 			listView.styleSheets.Add(style);
-			listView.style.flexGrow = 1;
-			listView.reorderable = true;
-			listView.reorderMode = ListViewReorderMode.Animated;
-			listView.showBorder = true;
-			listView.showFoldoutHeader = true;
-			listView.showBoundCollectionSize = false;
-			listView.headerTitle = $"{typeof (T).Name}s";
-			listView.showAddRemoveFooter = true;
-			listView.showAlternatingRowBackgrounds = AlternatingRowBackground.All;
-			listView.bindingPath = "deformerElements";
 			listView.makeItem = () => new PropertyField(){style = {marginLeft = -10}};
 			listView.bindItem = (element, index) =>
 			{
@@ -72,39 +70,38 @@ namespace DeformEditor
 			
 			listView.selectionChanged += OnSelectionChange;
             
-			if (root != null)
+			if (root == null) return;
+			
+			root.Add(listviewcontainer);
+			
+			if (inspectorElement == null)
 			{
-				root.Add(listView);
-				
-				if (inspectorElement == null)
-				{
-					inspectorElement = new Foldout(){name = "ComponentViewer", style = {
-						backgroundImage = DeformEditorResources.GetStyle ("Box").normal.background,
-						borderLeftWidth = DeformEditorResources.GetStyle ("Box").border.left,
-						borderRightWidth = DeformEditorResources.GetStyle ("Box").border.right,
-						borderTopWidth = DeformEditorResources.GetStyle ("Box").border.top,
-						borderBottomWidth = DeformEditorResources.GetStyle ("Box").border.bottom,
-						marginLeft = DeformEditorResources.GetStyle ("Box").margin.left,
-						marginRight = DeformEditorResources.GetStyle ("Box").margin.right,
-						marginTop = DeformEditorResources.GetStyle ("Box").margin.top,
-						marginBottom = DeformEditorResources.GetStyle ("Box").margin.bottom,
-						paddingLeft = DeformEditorResources.GetStyle ("Box").padding.left,
-						paddingRight = DeformEditorResources.GetStyle ("Box").padding.right,
-						paddingTop = DeformEditorResources.GetStyle ("Box").padding.top,
-						paddingBottom =DeformEditorResources.GetStyle ("Box").padding.bottom,
-						unitySliceLeft = 1,
-						unitySliceRight = 1,
-						unitySliceTop = 1,
-						unitySliceBottom = 1
-					}};
-					inspectorElement.style.marginBottom = 10;
-					inspectorElement.Q<Toggle>().style.paddingLeft = 24;
-				}
-				
-				if (inspectorElement.parent == null)
-				{
-					root.Add(inspectorElement);
-				}
+				inspectorElement = new Foldout(){name = "ComponentViewer", style = {
+					backgroundImage = DeformEditorResources.GetStyle ("Box").normal.background,
+					borderLeftWidth = DeformEditorResources.GetStyle ("Box").border.left,
+					borderRightWidth = DeformEditorResources.GetStyle ("Box").border.right,
+					borderTopWidth = DeformEditorResources.GetStyle ("Box").border.top,
+					borderBottomWidth = DeformEditorResources.GetStyle ("Box").border.bottom,
+					marginLeft = DeformEditorResources.GetStyle ("Box").margin.left,
+					marginRight = DeformEditorResources.GetStyle ("Box").margin.right,
+					marginTop = DeformEditorResources.GetStyle ("Box").margin.top,
+					marginBottom = DeformEditorResources.GetStyle ("Box").margin.bottom,
+					paddingLeft = DeformEditorResources.GetStyle ("Box").padding.left,
+					paddingRight = DeformEditorResources.GetStyle ("Box").padding.right,
+					paddingTop = DeformEditorResources.GetStyle ("Box").padding.top,
+					paddingBottom =DeformEditorResources.GetStyle ("Box").padding.bottom,
+					unitySliceLeft = 1,
+					unitySliceRight = 1,
+					unitySliceTop = 1,
+					unitySliceBottom = 1
+				}};
+				inspectorElement.style.marginBottom = 10;
+				inspectorElement.Q<Toggle>().style.paddingLeft = 24;
+			}
+			
+			if (inspectorElement.parent == null)
+			{
+				root.Add(inspectorElement);
 			}
 		}
 
@@ -142,6 +139,7 @@ namespace DeformEditor
 					var componentProperty = property.FindPropertyRelative("component");
 					var component = componentProperty.objectReferenceValue as Component;
 
+					inspectorElement.style.display = component == null ? DisplayStyle.None : DisplayStyle.Flex;
 					if (component != null)
 					{
 						Editor.CreateCachedEditor(component, null, ref selectedComponentInspectorEditor);

@@ -29,8 +29,6 @@ namespace DeformEditor
 			//	marginBottom = 10
 			//}});
 			new ReorderableComponentElementList<Deform.Deformer>(root, serializedObject, serializedObject.FindProperty("deformerElements"));
-			root.Q<ListView>().Q<Toggle>().pickingMode = PickingMode.Ignore;
-			root.Q<ListView>().Q<Toggle>().Query<VisualElement>().ForEach(ve => ve.pickingMode = PickingMode.Ignore);
 
 			root.Add (new IMGUIContainer(DrawIMGUI(DrawUtilityToolbar)){style = {
 				marginBottom = 10
