@@ -71,6 +71,7 @@ namespace DeformEditor
 				var field = (PropertyField)element;
 				field.BindProperty(elements.GetArrayElementAtIndex(index));
 			};
+			listviewcontainer.style.marginBottom = 1;
 			
 			listView.selectionChanged += OnSelectionChange;
 			listView.itemsChosen += OnSelectionChange;
@@ -100,7 +101,7 @@ namespace DeformEditor
 					unitySliceTop = 1,
 					unitySliceBottom = 1
 				}};
-				inspectorElement.style.marginBottom = 10;
+				inspectorElement.style.marginBottom = 4;
 				inspectorElement.Q<Toggle>().style.paddingLeft = 24;
 			}
 			
@@ -108,6 +109,19 @@ namespace DeformEditor
 			{
 				root.Add(inspectorElement);
 			}
+			
+			var box = new Box(){ style = {
+				marginBottom = 10,
+				paddingTop = 5,
+				paddingBottom = 5
+			}};
+			box.Add(new Label($"+ Drag {typeof(T).Name}s Here"){ style = {
+				unityTextAlign = TextAnchor.MiddleCenter,
+				color = Color.gray,
+				fontSize = 10
+			}});
+			
+			root.Add(box);
 		}
 
 		private void OnSelectionChange(IEnumerable<object> selectedItems)
