@@ -51,7 +51,7 @@ namespace DeformEditor
 				CleanupStaleInstances(); // 無効なインスタンスを削除
 			}
 			
-			Debug.Log($"Constructor called. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
+			//Debug.Log($"Constructor called. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
 			style = DeformEditorResources.LoadAssetOfType<StyleSheet>("listview");
 			listviewelement = DeformEditorResources.LoadAssetOfType<VisualTreeAsset>("listview");
 			InitializeListView(root);
@@ -160,8 +160,7 @@ namespace DeformEditor
 				Debug.LogWarning($"OnSelectionChange called on disposed instance: {instanceId}");
 				//return;
 			}
-			Debug.Log($"OnSelectionChange called. Instance: {instanceId}");
-			Debug.Log("Select");
+			//Debug.Log($"OnSelectionChange called. Instance: {instanceId}");
 			
 			// 既存のデリゲートを解除
 			UnregisterSceneGUI();
@@ -208,7 +207,7 @@ namespace DeformEditor
 			{
 				sceneGUIDelegate = new Action<SceneView>(SceneGUI);
 				SceneView.duringSceneGui += sceneGUIDelegate;
-				Debug.Log($"SceneGUI registered. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
+				//Debug.Log($"SceneGUI registered. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
 			}
 		}
 
@@ -217,7 +216,7 @@ namespace DeformEditor
 			if (sceneGUIDelegate != null)
 			{
 				SceneView.duringSceneGui -= sceneGUIDelegate;
-				Debug.Log($"SceneGUI unregistered. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
+				//Debug.Log($"SceneGUI unregistered. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
 				sceneGUIDelegate = null;
 			}
 		}

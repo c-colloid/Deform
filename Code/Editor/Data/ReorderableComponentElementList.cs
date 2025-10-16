@@ -130,10 +130,10 @@ namespace DeformEditor
 			//}
 			if (isDisposed)
 			{
-				Debug.LogWarning($"Dispose called multiple times on instance: {instanceId}");
+				//Debug.LogWarning($"Dispose called multiple times on instance: {instanceId}");
 				return;
 			}
-			Debug.Log($"Dispose called. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
+			//Debug.Log($"Dispose called. Instance: {instanceId}, Active instances: {ActiveInstances.Count}");
 #if UNITY_2019_1_OR_NEWER
 			UnregisterSceneGUI();
 #else
