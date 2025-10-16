@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using Deform;
+using DeformEditor.Manipulator;
 
 namespace DeformEditor
 {
@@ -120,6 +122,26 @@ namespace DeformEditor
 				color = Color.gray,
 				fontSize = 10
 			}});
+			
+			box.AddManipulator(new ComponentDropManipulator<Deformer>(listView,
+			(Deformers) =>
+			{
+				Deformers.ForEach(component =>
+				{
+					if (elements == null) return;
+					
+					// SerializedPropertyの配列サイズを増やす
+					int newIndex = elements.arraySize;
+					elements.InsertArrayElementAtIndex(newIndex);
+					//ListViewのcomponentプロパティに追加
+					var latestElement = elements.GetArrayElementAtIndex(newIndex);
+					latestElement.boxedValue = new DeformerElement(component,true);
+					
+					elements.serializedObject.ApplyModifiedProperties();
+				});
+				
+				listView.RefreshItems();
+			}));
 			
 			root.Add(box);
 		}
