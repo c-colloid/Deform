@@ -28,7 +28,7 @@ namespace DeformEditor
 		[SerializeField]
 		VisualTreeAsset listviewelement;
 		
-		private bool isSceneGUIRegistered = false;
+		//private bool isSceneGUIRegistered = false;
 		// インスタンスを追跡するための静的ディクショナリ
 		private static readonly Dictionary<int, WeakReference<ReorderableComponentElementList<T>>> ActiveInstances 
 			= new Dictionary<int, WeakReference<ReorderableComponentElementList<T>>>();
